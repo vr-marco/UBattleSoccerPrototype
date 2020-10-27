@@ -1,6 +1,6 @@
 
-#include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerBall.h"
+#include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerGameMode.h"
 #include "MagicBattleSoccerCharacter.h"
 #include "MagicBattleSoccerPlayerController.h"
@@ -130,7 +130,7 @@ void AMagicBattleSoccerBall::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (Role < ROLE_Authority)
+	if (GetLocalRole() < ROLE_Authority)
 	{
 		// The server manages the game state; the soccer ball will be replicated to us.
 
@@ -165,7 +165,7 @@ void AMagicBattleSoccerBall::Tick(float DeltaSeconds)
 	else
 	{
 		// No possessor. The ball is freely moving.
-		if (Role < ROLE_Authority)
+		if (GetLocalRole() < ROLE_Authority)
 		{
 			// Clients should update its local position based on where it is on the server
 			ClientSimulateFreeMovingBall();
@@ -210,7 +210,7 @@ void AMagicBattleSoccerBall::Tick(float DeltaSeconds)
 /** Called by the GameMode object when the next round has begun */
 void AMagicBattleSoccerBall::RoundHasStarted_Implementation()
 {
-	if (Role == ROLE_Authority)
+	if (GetLocalRole() == ROLE_Authority)
 	{
 		if (nullptr != Possessor)
 		{
@@ -228,7 +228,7 @@ void AMagicBattleSoccerBall::RoundHasStarted_Implementation()
 /** Called by a AMagicBattleSoccerCharacter object when it has been destroyed */
 void AMagicBattleSoccerBall::CharacterHasDestroyed_Implementation(AMagicBattleSoccerCharacter *Character)
 {
-	if (nullptr != Character && Role == ROLE_Authority)
+	if (nullptr != Character && GetLocalRole() == ROLE_Authority)
 	{
 		// Release the ball and ensure the possessor to ignore is reset
 		if (Character->PossessesBall())
@@ -277,7 +277,7 @@ void AMagicBattleSoccerBall::MoveWithPossessor()
 /** Sets the current ball possessor */
 void AMagicBattleSoccerBall::SetPossessor(AMagicBattleSoccerCharacter* Player)
 {
-	if (Role < ROLE_Authority)
+	if (GetLocalRole() < ROLE_Authority)
 	{
 		// Safety check. Only authority entities should drive the ball.
 	}
@@ -383,7 +383,7 @@ void AMagicBattleSoccerBall::KickToLocation(const FVector& Location, float Angle
 
 		UPrimitiveComponent *Root = Cast<UPrimitiveComponent>(GetRootComponent());
 		Root->SetPhysicsLinearVelocity(kick);
-		Root->SetPhysicsAngularVelocity(cross * forceMag * -4.f);
+		Root->SetPhysicsAngularVelocityInDegrees(cross * forceMag * -4.f);
 	}
 }
 

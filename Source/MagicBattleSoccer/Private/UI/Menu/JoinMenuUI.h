@@ -92,10 +92,10 @@ protected:
 	TSharedPtr<FServerEntry> SelectedItem;
 
 	/** get current status text */
-	FString GetBottomText() const;
+	FText GetBottomText() const;
 
 	/** current status text */
-	FString StatusText;
+	FText StatusText;
 
 	/** size of standard column in pixels */
 	int32 BoxWidth;

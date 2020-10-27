@@ -1,6 +1,6 @@
 
-#include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerProjectile.h"
+#include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerPlayerState.h"
 #include "MagicBattleSoccerWeapon_Projectile.h"
 
@@ -13,18 +13,18 @@ AMagicBattleSoccerWeapon_Projectile::AMagicBattleSoccerWeapon_Projectile(const c
 // Input
 
 /** [local + server] sets the firing target */
-void AMagicBattleSoccerWeapon_Projectile::SetTargetLocationAdjustedForVelocity(FVector TargetLocation, FVector TargetVelocity)
+void AMagicBattleSoccerWeapon_Projectile::SetTargetLocationAdjustedForVelocity(FVector ThisTargetLocation, FVector TargetVelocity)
 {
-	if (Role < ROLE_Authority)
+	if (GetLocalRole() < ROLE_Authority)
 	{
-		ServerSetTargetLocationAdjustedForVelocity(TargetLocation, TargetVelocity);
+		ServerSetTargetLocationAdjustedForVelocity(ThisTargetLocation, TargetVelocity);
 	}
 
 	// Adjust for projectile speed.
 	// TODO: Why are we not designating the projectile's speed?? We're completely guessing here!
-	float d = FVector::Dist(GetActorLocation(), TargetLocation);
+	float d = FVector::Dist(GetActorLocation(), ThisTargetLocation);
 	float t = d / 2500.f;
-	this->TargetLocation = TargetLocation + TargetVelocity * t;
+	this->TargetLocation = ThisTargetLocation + TargetVelocity * t;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -34,21 +34,21 @@ void AMagicBattleSoccerWeapon_Projectile::SetTargetLocationAdjustedForVelocity(F
 TArray<FWeaponActorEffectiveness> AMagicBattleSoccerWeapon_Projectile::GetCurrentEffectiveness()
 {
 	TArray<FWeaponActorEffectiveness> effectivenessList;
-	if (nullptr != Instigator && nullptr != Instigator->PlayerState)
+	if (nullptr != GetInstigator() && nullptr != GetInstigator()->GetPlayerState())
 	{
 		UWorld *World = GetWorld();
 		AMagicBattleSoccerGameState* GameState = Cast<AMagicBattleSoccerGameState>(World->GetGameState<AMagicBattleSoccerGameState>());
-		AMagicBattleSoccerPlayerState *PlayerState = Cast<AMagicBattleSoccerPlayerState>(Instigator->PlayerState);
+		AMagicBattleSoccerPlayerState *PlayerState = Cast<AMagicBattleSoccerPlayerState>(GetInstigator()->GetPlayerState());
 		if (nullptr != GameState)
 		{
 			const TArray<AMagicBattleSoccerCharacter*>& Opponents = GameState->GetOpponents(PlayerState);
 			for (TArray<AMagicBattleSoccerCharacter*>::TConstIterator It(Opponents.CreateConstIterator()); It; ++It)
 			{
-				FVector v = (*It)->GetActorLocation() - Instigator->GetActorLocation();
-				float dp = FVector::DotProduct(v, Instigator->GetActorForwardVector());
+				FVector v = (*It)->GetActorLocation() - GetInstigator()->GetActorLocation();
+				float dp = FVector::DotProduct(v, GetInstigator()->GetActorForwardVector());
 				if (dp > 0)
 				{
-					float d = Instigator->GetDistanceTo(*It);
+					float d = GetInstigator()->GetDistanceTo(*It);
 					if (d < WeaponConfig.EffectiveRange)
 					{
 						FWeaponActorEffectiveness e;
@@ -68,10 +68,10 @@ TArray<FWeaponActorEffectiveness> AMagicBattleSoccerWeapon_Projectile::GetCurren
 
 void AMagicBattleSoccerWeapon_Projectile::FireWeapon()
 {
-	if (nullptr != Instigator)
+	if (nullptr != GetInstigator())
 	{
 		// If the instigator is running, then fire the projectile immediately
-		if (Instigator->GetVelocity().Size() > 0.001f)
+		if (GetInstigator()->GetVelocity().Size() > 0.001f)
 		{
 			FireWeapon_Delayed();
 		}
@@ -85,13 +85,13 @@ void AMagicBattleSoccerWeapon_Projectile::FireWeapon()
 
 void AMagicBattleSoccerWeapon_Projectile::FireWeapon_Delayed()
 {
-	if (nullptr != Instigator)
+	if (nullptr != GetInstigator())
 	{
-		FVector ShootDir = TargetLocation - Instigator->GetActorLocation();
+		FVector ShootDir = TargetLocation - GetInstigator()->GetActorLocation();
 		ShootDir.Z = 0;
 		ShootDir.Normalize();
 		// We should be factoring in the muzzle location, but this seems to work better
-		FVector Origin = Instigator->GetActorLocation() + ShootDir * 80.0f;
+		FVector Origin = GetInstigator()->GetActorLocation() + ShootDir * 80.0f;
 
 		//DrawDebugSphere(GetWorld(), Origin + ShootDir * 400.0f, 50.0f, 16, FColor::Red, true);
 
@@ -111,10 +111,10 @@ bool AMagicBattleSoccerWeapon_Projectile::ServerFireProjectile_Validate(FVector 
 void AMagicBattleSoccerWeapon_Projectile::ServerFireProjectile_Implementation(FVector Origin, FVector_NetQuantizeNormal ShootDir)
 {
 	FTransform SpawnTM(ShootDir.Rotation(), Origin);
-	AMagicBattleSoccerProjectile* Projectile = Cast<AMagicBattleSoccerProjectile>(UGameplayStatics::BeginSpawningActorFromClass(this, ProjectileConfig.ProjectileClass, SpawnTM));
+	AMagicBattleSoccerProjectile* Projectile = Cast<AMagicBattleSoccerProjectile>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this, ProjectileConfig.ProjectileClass, SpawnTM));
 	if (Projectile)
 	{
-		Projectile->Instigator = Instigator;
+		Projectile->SetInstigator(GetInstigator());
 		Projectile->SetOwner(this);
 
 		// The ShooterDemo has us assigning ShootDir. That is incorrect because the projectile is already facing that

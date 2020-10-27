@@ -4,9 +4,9 @@
 *
 */
 
+#include "ErrorUI.h"
 #include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerHUD.h"
-#include "ErrorUI.h"
 #include "MagicBattleSoccerEngine.h"
 #include "MagicBattleSoccerStyles.h"
 #include "MenuBackgroundWidgetStyle.h"
@@ -49,7 +49,7 @@ void SErrorUI::Construct(const FArguments& args)
 						[
 							SNew(STextBlock)
 							.TextStyle(FMagicBattleSoccerStyles::Get(), "MagicBattleSoccer.ButtonTextStyle")
-							.Text(this, &SErrorUI::GetLastErrorString)
+							//.Text(FText::FromString(SErrorUI::GetLastErrorString()))
 							.WrapTextAt(770)
 						]
 						+ SVerticalBox::Slot()
@@ -75,7 +75,12 @@ void SErrorUI::Construct(const FArguments& args)
 /** Gets the most recent engine error string */
 FString SErrorUI::GetLastErrorString() const
 {
-	return Cast<UMagicBattleSoccerEngine>(GEngine)->GetLastErrorString();
+	if (GEngine)
+	{
+		return Cast<UMagicBattleSoccerEngine>(GEngine)->GetLastErrorString();
+	}
+	else
+		return "";
 }
 
 /** Called when the user presses OK */

@@ -1,10 +1,11 @@
+
+#include "MagicBattleSoccerCharacter.h"
 #include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerBall.h"
 #include "MagicBattleSoccerGoal.h"
 #include "MagicBattleSoccerGameMode.h"
 #include "MagicBattleSoccerGameState.h"
 #include "MagicBattleSoccerPlayerState.h"
-#include "MagicBattleSoccerCharacter.h"
 #include "MagicBattleSoccerWeapon.h"
 #include "MagicBattleSoccerProjectile.h"
 #include "MagicBattleSoccerSpawnPoint.h"
@@ -34,7 +35,7 @@ void AMagicBattleSoccerCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	if (ROLE_Authority == Role)
+	if (ROLE_Authority == GetLocalRole())
 	{
 		// Reset the health count
 		Health = MaxHealth;
@@ -106,13 +107,13 @@ void AMagicBattleSoccerCharacter::OnRep_IsStunned()
 /** Gets the character's team number */
 int32 AMagicBattleSoccerCharacter::GetTeamNumber()
 {
-	if (nullptr == PlayerState)
+	if (nullptr == GetPlayerState())
 	{
 		return 0;
 	}
 	else
 	{
-		return Cast<AMagicBattleSoccerPlayerState>(PlayerState)->TeamNumber;
+		return Cast<AMagicBattleSoccerPlayerState>(GetPlayerState())->TeamNumber;
 	}
 }
 
@@ -138,7 +139,7 @@ void AMagicBattleSoccerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (ROLE_Authority == Role)
+	if (ROLE_Authority == GetLocalRole())
 	{
 		// Servers should add this character to the game mode cache
 		GetGameState()->SoccerPlayers.Add(this);
@@ -157,7 +158,7 @@ void AMagicBattleSoccerCharacter::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	// Servers should manage ball assignments
-	if (ROLE_Authority == Role)
+	if (ROLE_Authority == GetLocalRole())
 	{
 		AMagicBattleSoccerBall *Ball = GetGameState()->SoccerBall;
 		float d = FVector::DistSquared(GetActorLocation(), Ball->GetActorLocation());
@@ -187,7 +188,7 @@ void AMagicBattleSoccerCharacter::ReceiveEndPlay(EEndPlayReason::Type EndPlayRea
 {
 	Super::ReceiveEndPlay(EndPlayReason);
 
-	if (ROLE_Authority == Role)
+	if (ROLE_Authority == GetLocalRole())
 	{
 		// Remove this character from the game mode cache
 		GetGameState()->SoccerPlayers.Remove(this);
@@ -201,7 +202,7 @@ void AMagicBattleSoccerCharacter::ReceiveEndPlay(EEndPlayReason::Type EndPlayRea
 /** This occurs when the player is destroyed */
 void AMagicBattleSoccerCharacter::Destroyed()
 {
-	if (Role < ROLE_Authority)
+	if (GetLocalRole() < ROLE_Authority)
 	{
 		// The server manages the game state; the player list will be replicated to us.
 	}
@@ -254,9 +255,9 @@ float AMagicBattleSoccerCharacter::TakeDamage(float Damage, struct FDamageEvent 
 bool AMagicBattleSoccerCharacter::CanDie(float KillingDamage, FDamageEvent const& DamageEvent, AController* Killer, AActor* DamageCauser) const
 {
 	if (IsPendingKill()								// already destroyed
-		|| Role != ROLE_Authority						// not authority
+		|| GetLocalRole() != ROLE_Authority						// not authority
 		|| GetWorld()->GetAuthGameMode() == NULL
-		|| GetWorld()->GetAuthGameMode()->GetMatchState() == MatchState::LeavingMap)	// level transition occurring
+		|| ((AGameMode*)GetWorld()->GetAuthGameMode())->GetMatchState() == MatchState::LeavingMap)	// level transition occurring
 	{
 		return false;
 	}
@@ -289,11 +290,11 @@ bool AMagicBattleSoccerCharacter::Die(float KillingDamage, FDamageEvent const& D
 
 void AMagicBattleSoccerCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* PawnInstigator, class AActor* DamageCauser)
 {
-	bReplicateMovement = false;
-	bTearOff = true;
+	SetReplicateMovement(false);
+	TearOff();
 	bIsDead = true;
 
-	if (ROLE_Authority == Role)
+	if (ROLE_Authority == GetLocalRole())
 	{
 		ReplicateHit(KillingDamage, DamageEvent, PawnInstigator, DamageCauser, true);
 
@@ -331,7 +332,7 @@ void AMagicBattleSoccerCharacter::DelayedSinkIntoGround()
 
 void AMagicBattleSoccerCharacter::PlayHit(float DamageTaken, struct FDamageEvent const& DamageEvent, class APawn* PawnInstigator, class AActor* DamageCauser)
 {
-	if (ROLE_Authority == Role)
+	if (ROLE_Authority == GetLocalRole())
 	{
 		ReplicateHit(DamageTaken, DamageEvent, PawnInstigator, DamageCauser, false);
 	}
@@ -450,7 +451,7 @@ void AMagicBattleSoccerCharacter::SetSecondaryWeapon(AMagicBattleSoccerWeapon* N
 
 void AMagicBattleSoccerCharacter::SpawnDefaultInventory()
 {
-	if (Role < ROLE_Authority)
+	if (GetLocalRole() < ROLE_Authority)
 	{
 		return;
 	}
@@ -458,7 +459,7 @@ void AMagicBattleSoccerCharacter::SpawnDefaultInventory()
 	if (nullptr != DefaultPrimaryWeaponClass)
 	{
 		FActorSpawnParameters SpawnInfo;
-		SpawnInfo.bNoCollisionFail = true;
+		SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		AMagicBattleSoccerWeapon* NewWeapon = GetWorld()->SpawnActor<AMagicBattleSoccerWeapon>(DefaultPrimaryWeaponClass, SpawnInfo);
 		EquipPrimaryWeapon(NewWeapon);
 	}
@@ -466,7 +467,7 @@ void AMagicBattleSoccerCharacter::SpawnDefaultInventory()
 	if (nullptr != DefaultSecondaryWeaponClass)
 	{
 		FActorSpawnParameters SpawnInfo;
-		SpawnInfo.bNoCollisionFail = true;
+		SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		AMagicBattleSoccerWeapon* NewWeapon = GetWorld()->SpawnActor<AMagicBattleSoccerWeapon>(DefaultSecondaryWeaponClass, SpawnInfo);
 		EquipSecondaryWeapon(NewWeapon);
 	}
@@ -474,7 +475,7 @@ void AMagicBattleSoccerCharacter::SpawnDefaultInventory()
 
 void AMagicBattleSoccerCharacter::DestroyInventory()
 {
-	if (Role < ROLE_Authority)
+	if (GetLocalRole() < ROLE_Authority)
 	{
 		return;
 	}
@@ -514,7 +515,7 @@ void AMagicBattleSoccerCharacter::ServerEquipSecondaryWeapon_Implementation(AMag
 
 void AMagicBattleSoccerCharacter::AddWeapon(AMagicBattleSoccerWeapon* Weapon)
 {
-	if (Weapon && Role == ROLE_Authority)
+	if (Weapon && GetLocalRole() == ROLE_Authority)
 	{
 		Weapon->OnEnterInventory(this);
 	}
@@ -522,7 +523,7 @@ void AMagicBattleSoccerCharacter::AddWeapon(AMagicBattleSoccerWeapon* Weapon)
 
 void AMagicBattleSoccerCharacter::RemoveWeapon(AMagicBattleSoccerWeapon* Weapon)
 {
-	if (Weapon && Role == ROLE_Authority)
+	if (Weapon && GetLocalRole() == ROLE_Authority)
 	{
 		Weapon->OnLeaveInventory();
 	}
@@ -532,7 +533,7 @@ void AMagicBattleSoccerCharacter::EquipPrimaryWeapon(AMagicBattleSoccerWeapon* W
 {
 	if (Weapon)
 	{
-		if (Role == ROLE_Authority)
+		if (GetLocalRole() == ROLE_Authority)
 		{
 			SetPrimaryWeapon(Weapon);
 		}
@@ -547,7 +548,7 @@ void AMagicBattleSoccerCharacter::EquipSecondaryWeapon(AMagicBattleSoccerWeapon*
 {
 	if (Weapon)
 	{
-		if (Role == ROLE_Authority)
+		if (GetLocalRole() == ROLE_Authority)
 		{
 			SetSecondaryWeapon(Weapon);
 		}
@@ -596,7 +597,7 @@ bool AMagicBattleSoccerCharacter::CanFire()
 /** [local + server] Updates the movement speed based on conditions (ball possessor, etc) */
 void AMagicBattleSoccerCharacter::UpdateMovementSpeed()
 {
-	if (ROLE_Authority == Role)
+	if (ROLE_Authority == GetLocalRole())
 	{
 		AMagicBattleSoccerBall *Ball = GetSoccerBall();
 
@@ -628,7 +629,7 @@ bool AMagicBattleSoccerCharacter::IsWeaponPreventingPlayerMove(AMagicBattleSocce
 /** [local] Kicks the ball with a force */
 void AMagicBattleSoccerCharacter::KickBall(const FVector& Force)
 {
-	if (Role < ROLE_Authority)
+	if (GetLocalRole() < ROLE_Authority)
 	{
 		ServerKickBall(Force);
 	}
@@ -642,7 +643,7 @@ void AMagicBattleSoccerCharacter::KickBall(const FVector& Force)
 /** [local] Kicks the ball to a location */
 void AMagicBattleSoccerCharacter::KickBallToLocation(const FVector& Location, float AngleInDegrees)
 {
-	if (Role < ROLE_Authority)
+	if (GetLocalRole() < ROLE_Authority)
 	{
 		ServerKickBallToLocation(Location, AngleInDegrees);
 	}

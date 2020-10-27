@@ -1,7 +1,7 @@
 
+#include "MagicBattleSoccerWeapon.h"
 #include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerGoal.h"
-#include "MagicBattleSoccerWeapon.h"
 #include "MagicBattleSoccerCharacter.h"
 #include "MagicBattleSoccerGameState.h"
 #include "MagicBattleSoccerPlayerController.h"
@@ -65,31 +65,31 @@ void AMagicBattleSoccerWeapon::OnUnEquip()
 // Input
 
 /** [local + server] sets the firing target */
-void AMagicBattleSoccerWeapon::SetTargetLocation(FVector TargetLocation)
+void AMagicBattleSoccerWeapon::SetTargetLocation(FVector ThisTargetLocation)
 {
-	if (Role < ROLE_Authority)
+	if (GetLocalRole() < ROLE_Authority)
 	{
-		ServerSetTargetLocation(TargetLocation);
+		ServerSetTargetLocation(ThisTargetLocation);
 	}
 
-	this->TargetLocation = TargetLocation;
+	this->TargetLocation = ThisTargetLocation;
 }
 
 /** [local + server] sets the firing target */
-void AMagicBattleSoccerWeapon::SetTargetLocationAdjustedForVelocity(FVector TargetLocation, FVector TargetVelocity)
+void AMagicBattleSoccerWeapon::SetTargetLocationAdjustedForVelocity(FVector ThisTargetLocation, FVector TargetVelocity)
 {
-	if (Role < ROLE_Authority)
+	if (GetLocalRole() < ROLE_Authority)
 	{
-		ServerSetTargetLocationAdjustedForVelocity(TargetLocation, TargetVelocity);
+		ServerSetTargetLocationAdjustedForVelocity(ThisTargetLocation, TargetVelocity);
 	}
 
 	// Virtual functions for projectile weapons should handle this
-	this->TargetLocation = TargetLocation;
+	this->TargetLocation = ThisTargetLocation;
 }
 
 void AMagicBattleSoccerWeapon::StartFire()
 {
-	if (Role < ROLE_Authority)
+	if (GetLocalRole() < ROLE_Authority)
 	{
 		ServerStartFire();
 	}
@@ -103,7 +103,7 @@ void AMagicBattleSoccerWeapon::StartFire()
 
 void AMagicBattleSoccerWeapon::StopFire()
 {
-	if (Role < ROLE_Authority)
+	if (GetLocalRole() < ROLE_Authority)
 	{
 		ServerStopFire();
 	}
@@ -131,7 +131,7 @@ bool AMagicBattleSoccerWeapon::CanFire() const
 
 EWeaponState AMagicBattleSoccerWeapon::GetCurrentState() const
 {
-	if (ROLE_Authority == Role
+	if (ROLE_Authority == GetLocalRole()
 		|| (MyPawn && MyPawn->IsLocallyControlled())
 		)
 	{
@@ -147,7 +147,7 @@ void AMagicBattleSoccerWeapon::SetOwningPawn(AMagicBattleSoccerCharacter* NewOwn
 {
 	if (MyPawn != NewOwner)
 	{
-		Instigator = NewOwner;
+		SetInstigator(NewOwner);
 		MyPawn = NewOwner;
 		// net owner for RPC calls
 		SetOwner(NewOwner);
@@ -166,24 +166,24 @@ TArray<FWeaponActorEffectiveness> AMagicBattleSoccerWeapon::GetCurrentEffectiven
 //////////////////////////////////////////////////////////////////////////
 // Input - server side
 
-bool AMagicBattleSoccerWeapon::ServerSetTargetLocation_Validate(FVector TargetLocation)
+bool AMagicBattleSoccerWeapon::ServerSetTargetLocation_Validate(FVector ThisTargetLocation)
 {
 	return true;
 }
 
-void AMagicBattleSoccerWeapon::ServerSetTargetLocation_Implementation(FVector TargetLocation)
+void AMagicBattleSoccerWeapon::ServerSetTargetLocation_Implementation(FVector ThisTargetLocation)
 {
-	SetTargetLocation(TargetLocation);
+	SetTargetLocation(ThisTargetLocation);
 }
 
-bool AMagicBattleSoccerWeapon::ServerSetTargetLocationAdjustedForVelocity_Validate(FVector TargetLocation, FVector TargetVelocity)
+bool AMagicBattleSoccerWeapon::ServerSetTargetLocationAdjustedForVelocity_Validate(FVector ThisTargetLocation, FVector ThisTargetVelocity)
 {
 	return true;
 }
 
-void AMagicBattleSoccerWeapon::ServerSetTargetLocationAdjustedForVelocity_Implementation(FVector TargetLocation, FVector TargetVelocity)
+void AMagicBattleSoccerWeapon::ServerSetTargetLocationAdjustedForVelocity_Implementation(FVector ThisTargetLocation, FVector TargetVelocity)
 {
-	SetTargetLocationAdjustedForVelocity(TargetLocation, TargetVelocity);
+	SetTargetLocationAdjustedForVelocity(ThisTargetLocation, TargetVelocity);
 }
 
 bool AMagicBattleSoccerWeapon::ServerStartFire_Validate()
@@ -232,13 +232,13 @@ void AMagicBattleSoccerWeapon::HandleFiring()
 	if (nullptr != MyPawn && MyPawn->IsLocallyControlled())
 	{
 		// local client will notify server
-		if (Role < ROLE_Authority)
+		if (GetLocalRole() < ROLE_Authority)
 		{
 			ServerHandleFiring();
 		}
 
 		// Make the player aim in the direction they're firing if they're not running
-		AMagicBattleSoccerPlayerController* const PlayerController = Instigator ? Cast<AMagicBattleSoccerPlayerController>(Instigator->Controller) : nullptr;
+		AMagicBattleSoccerPlayerController* const PlayerController = GetInstigator() ? Cast<AMagicBattleSoccerPlayerController>(GetInstigator()->Controller) : nullptr;
 		if (nullptr != PlayerController
 			&& nullptr != PlayerController->GetPawn()
 			&& nullptr != PlayerController->GetPawn()->GetMovementComponent()
@@ -278,7 +278,7 @@ void AMagicBattleSoccerWeapon::SetWeaponState(EWeaponState NewState)
 
 	LocalState = NewState;
 
-	if (ROLE_Authority == Role)
+	if (ROLE_Authority == GetLocalRole())
 	{
 		ServerState = NewState;
 	}
@@ -311,7 +311,7 @@ void AMagicBattleSoccerWeapon::OnEnterInventory(AMagicBattleSoccerCharacter* New
 
 void AMagicBattleSoccerWeapon::OnLeaveInventory()
 {
-	if (Role == ROLE_Authority)
+	if (GetLocalRole() == ROLE_Authority)
 	{
 		SetOwningPawn(NULL);
 	}
@@ -341,8 +341,7 @@ void AMagicBattleSoccerWeapon::AttachMeshToPawn(FName InSocketName)
 
 		// Attach the weapon to the player's right hand
 		USkeletalMeshComponent* PlayerMesh = Cast<USkeletalMeshComponent>(MyPawn->GetComponentByClass(USkeletalMeshComponent::StaticClass()));
-		AttachRootComponentTo(PlayerMesh, InSocketName, EAttachLocation::SnapToTarget);
-
+		AttachToComponent(PlayerMesh, FAttachmentTransformRules::SnapToTargetIncludingScale, InSocketName);
 		// Show our mesh
 		SetActorHiddenInGame(false);
 	}
@@ -350,7 +349,7 @@ void AMagicBattleSoccerWeapon::AttachMeshToPawn(FName InSocketName)
 
 void AMagicBattleSoccerWeapon::DetachMeshFromPawn()
 {
-	DetachRootComponentFromParent();
+	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	SetActorHiddenInGame(true);
 }
 

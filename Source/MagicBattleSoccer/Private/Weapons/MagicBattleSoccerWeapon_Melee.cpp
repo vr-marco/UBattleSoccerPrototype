@@ -1,6 +1,6 @@
 
-#include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerWeapon_Melee.h"
+#include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerGameState.h"
 #include "MagicBattleSoccerPlayerState.h"
 #include "MagicBattleSoccerPlayerController.h"
@@ -17,17 +17,17 @@ AMagicBattleSoccerWeapon_Melee::AMagicBattleSoccerWeapon_Melee(const class FObje
 TArray<FWeaponActorEffectiveness> AMagicBattleSoccerWeapon_Melee::GetCurrentEffectiveness()
 {
 	TArray<FWeaponActorEffectiveness> effectivenessList;
-	if (nullptr != Instigator && nullptr != Instigator->PlayerState)
+	if (nullptr != GetInstigator() && nullptr != GetInstigator()->GetPlayerState())
 	{
 		UWorld *World = GetWorld();
 		AMagicBattleSoccerGameState* GameState = Cast<AMagicBattleSoccerGameState>(World->GetGameState<AMagicBattleSoccerGameState>());
-		AMagicBattleSoccerPlayerState *PlayerState = Cast<AMagicBattleSoccerPlayerState>(Instigator->PlayerState);
+		AMagicBattleSoccerPlayerState *PlayerState = Cast<AMagicBattleSoccerPlayerState>(GetInstigator()->GetPlayerState());
 		if (nullptr != GameState)
 		{
 			const TArray<AMagicBattleSoccerCharacter*>& Opponents = GameState->GetOpponents(PlayerState);
 			for (TArray<AMagicBattleSoccerCharacter*>::TConstIterator It(Opponents.CreateConstIterator()); It; ++It)
 			{
-				float d = Instigator->GetDistanceTo(*It);
+				float d = GetInstigator()->GetDistanceTo(*It);
 				if (d < WeaponConfig.EffectiveRange)
 				{
 					FWeaponActorEffectiveness e;
@@ -51,7 +51,7 @@ void AMagicBattleSoccerWeapon_Melee::FireWeapon()
 	FVector WorldLocation;
 	FVector WorldDirection;
 
-	AController* const Controller = Instigator ? Instigator->Controller : nullptr;
+	AController* const Controller = GetInstigator() ? GetInstigator()->Controller : nullptr;
 	if (nullptr != Controller)
 	{
 		// Deal damage half way through the swing
@@ -65,7 +65,7 @@ void AMagicBattleSoccerWeapon_Melee::ApplySweepDamage()
 	// This is inaccurate and hacky, but it gets the job done
 	if (MeleeConfig.Damage > 0 && MeleeConfig.DamageRadius > 0 && MeleeConfig.DamageType)
 	{
-		AController* const Controller = Instigator ? Instigator->Controller : nullptr;
+		AController* const Controller = GetInstigator() ? GetInstigator()->Controller : nullptr;
 		UGameplayStatics::ApplyRadialDamage(this, MeleeConfig.Damage, GetActorLocation(), MeleeConfig.DamageRadius, MeleeConfig.DamageType, TArray<AActor*>(), this, Controller, true);
 	}
 }

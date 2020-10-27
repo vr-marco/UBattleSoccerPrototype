@@ -4,11 +4,11 @@
 *
 */
 
+#include "JoinMenuUI.h"
 #include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerHUD.h"
 #include "MagicBattleSoccerGameSession.h"
 #include "MagicBattleSoccerInstance.h"
-#include "JoinMenuUI.h"
 #include "MagicBattleSoccerStyles.h"
 #include "MenuBackgroundWidgetStyle.h"
 #include "MenuItemWidgetStyle.h"
@@ -109,7 +109,7 @@ void SJoinMenuUI::UpdateSearchStatus()
 		switch (SearchState)
 		{
 		case EOnlineAsyncTaskState::InProgress:
-			StatusText = TEXT("SEARCHING...");
+			StatusText = NSLOCTEXT("MyNameSpace", "Searching", "SEARCHING...");
 			bFinishSearch = false;
 			break;
 
@@ -121,11 +121,11 @@ void SJoinMenuUI::UpdateSearchStatus()
 			check(SearchResults.Num() == NumSearchResults);
 			if (NumSearchResults == 0)
 			{
-				StatusText = TEXT("NO SERVERS FOUND, PRESS SPACE TO TRY AGAIN");
+				StatusText = NSLOCTEXT("MyNameSpace", "NoServersFound", "NO SERVERS FOUND, PRESS SPACE TO TRY AGAIN");
 			}
 			else
 			{
-				StatusText = TEXT("PRESS SPACE TO REFRESH SERVER LIST");
+				StatusText = NSLOCTEXT("MyNameSpace", "PressSpaceToRefresh", "PRESS SPACE TO REFRESH SERVER LIST");
 			}
 
 			for (int32 IdxResult = 0; IdxResult < NumSearchResults; ++IdxResult)
@@ -155,7 +155,7 @@ void SJoinMenuUI::UpdateSearchStatus()
 		case EOnlineAsyncTaskState::Failed:
 			// intended fall-through
 		case EOnlineAsyncTaskState::NotStarted:
-			StatusText = "";
+			StatusText = NSLOCTEXT("MyNameSpace", "Empty", "");
 			// intended fall-through
 		default:
 			break;
@@ -168,7 +168,7 @@ void SJoinMenuUI::UpdateSearchStatus()
 	}
 }
 
-FString SJoinMenuUI::GetBottomText() const
+FText SJoinMenuUI::GetBottomText() const
 {
 	return StatusText;
 }
@@ -280,7 +280,7 @@ TSharedRef<ITableRow> SJoinMenuUI::MakeListViewWidget(TSharedPtr<FServerEntry> I
 				ItemText = Item->Ping;
 			}
 			return SNew(STextBlock)
-				.Text(ItemText)
+				.Text(FText::FromString(ItemText))
 				.TextStyle(FMagicBattleSoccerStyles::Get(), "MagicBattleSoccer.MenuServerListTextStyle");
 		}
 		TSharedPtr<FServerEntry> Item;

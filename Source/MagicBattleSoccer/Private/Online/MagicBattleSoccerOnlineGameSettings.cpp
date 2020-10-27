@@ -1,6 +1,6 @@
-#include "MagicBattleSoccer.h"
-#include "MagicBattleSoccerOnlineGameSettings.h"
 
+#include "MagicBattleSoccerOnlineGameSettings.h"
+#include "MagicBattleSoccer.h"
 
 FMagicBattleSoccerOnlineSessionSettings::FMagicBattleSoccerOnlineSessionSettings(bool bIsLAN, bool bIsPresence, int32 MaxNumPlayers)
 {

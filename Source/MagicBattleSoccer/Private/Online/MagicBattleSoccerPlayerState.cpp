@@ -1,7 +1,6 @@
 
-
-#include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerPlayerState.h"
+#include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerGameMode.h"
 
 AMagicBattleSoccerPlayerState::AMagicBattleSoccerPlayerState(const class FObjectInitializer& OI)
@@ -29,7 +28,7 @@ void AMagicBattleSoccerPlayerState::GetLifetimeReplicatedProps(TArray< FLifetime
 /** Assigns a unique bot name to the player */
 void AMagicBattleSoccerPlayerState::AssignBotName()
 {
-	if (ROLE_Authority > Role)
+	if (ROLE_Authority > GetLocalRole())
 	{
 		// Only servers should be calling this
 	}

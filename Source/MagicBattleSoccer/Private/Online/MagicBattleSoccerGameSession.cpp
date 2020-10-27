@@ -1,5 +1,6 @@
-#include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerGameSession.h"
+#include "MagicBattleSoccer.h"
+#include "OnlineSubsystemSessionSettings.h"
 #include "MagicBattleSoccerOnlineGameSettings.h"
 
 namespace
@@ -55,9 +56,9 @@ const TArray<FOnlineSessionSearchResult> & AMagicBattleSoccerGameSession::GetSea
 * @param SessionName the name of the session this callback is for
 * @param bWasSuccessful true if the async action completed without error, false if there was an error
 */
-void AMagicBattleSoccerGameSession::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
+void AMagicBattleSoccerGameSession::OnCreateSessionComplete(FName ThisSessionName, bool bWasSuccessful)
 {
-	UE_LOG(LogOnlineGame, Verbose, TEXT("OnCreateSessionComplete %s bSuccess: %d"), *SessionName.ToString(), bWasSuccessful);
+	UE_LOG(LogOnlineGame, Verbose, TEXT("OnCreateSessionComplete %s bSuccess: %d"), *ThisSessionName.ToString(), bWasSuccessful);
 
 	IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get();
 	if (OnlineSub)
@@ -66,7 +67,7 @@ void AMagicBattleSoccerGameSession::OnCreateSessionComplete(FName SessionName, b
 		Sessions->ClearOnCreateSessionCompleteDelegate_Handle(OnCreateSessionCompleteDelegateHandle);
 	}
 
-	OnCreatePresenceSessionComplete().Broadcast(SessionName, bWasSuccessful);
+	OnCreatePresenceSessionComplete().Broadcast(ThisSessionName, bWasSuccessful);
 }
 
 /**
@@ -75,9 +76,9 @@ void AMagicBattleSoccerGameSession::OnCreateSessionComplete(FName SessionName, b
 * @param SessionName the name of the session this callback is for
 * @param bWasSuccessful true if the async action completed without error, false if there was an error
 */
-void AMagicBattleSoccerGameSession::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
+void AMagicBattleSoccerGameSession::OnDestroySessionComplete(FName ThisSessionName, bool bWasSuccessful)
 {
-	UE_LOG(LogOnlineGame, Verbose, TEXT("OnDestroySessionComplete %s bSuccess: %d"), *SessionName.ToString(), bWasSuccessful);
+	UE_LOG(LogOnlineGame, Verbose, TEXT("OnDestroySessionComplete %s bSuccess: %d"), *ThisSessionName.ToString(), bWasSuccessful);
 
 	IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get();
 	if (OnlineSub)
@@ -90,12 +91,12 @@ void AMagicBattleSoccerGameSession::OnDestroySessionComplete(FName SessionName, 
 
 
 /** Host a new online session */
-bool AMagicBattleSoccerGameSession::HostSession(TSharedPtr<FUniqueNetId> UserId, FName SessionName, const FString & GameType, const FString & MapName, bool bIsLAN, bool bIsPresence, int32 MaxNumPlayers)
+bool AMagicBattleSoccerGameSession::HostSession(TSharedPtr<const FUniqueNetId> UserId, FName ThisSessionName, const FString & GameType, const FString & MapName, bool bIsLAN, bool bIsPresence, int32 MaxNumPlayers)
 {
 	IOnlineSubsystem* const OnlineSub = IOnlineSubsystem::Get();
 	if (OnlineSub)
 	{
-		CurrentSessionParams.SessionName = SessionName;
+		CurrentSessionParams.SessionName = ThisSessionName;
 		CurrentSessionParams.bIsLAN = bIsLAN;
 		CurrentSessionParams.bIsPresence = bIsPresence;
 		CurrentSessionParams.UserId = UserId;
@@ -152,12 +153,12 @@ void AMagicBattleSoccerGameSession::OnFindSessionsComplete(bool bWasSuccessful)
 	}
 }
 
-void AMagicBattleSoccerGameSession::FindSessions(TSharedPtr<FUniqueNetId> UserId, FName SessionName, bool bIsLAN, bool bIsPresence)
+void AMagicBattleSoccerGameSession::FindSessions(TSharedPtr<const FUniqueNetId> UserId, FName ThisSessionName, bool bIsLAN, bool bIsPresence)
 {
 	IOnlineSubsystem* OnlineSub = IOnlineSubsystem::Get();
 	if (OnlineSub)
 	{
-		CurrentSessionParams.SessionName = SessionName;
+		CurrentSessionParams.SessionName = ThisSessionName;
 		CurrentSessionParams.bIsLAN = bIsLAN;
 		CurrentSessionParams.bIsPresence = bIsPresence;
 		CurrentSessionParams.UserId = UserId;

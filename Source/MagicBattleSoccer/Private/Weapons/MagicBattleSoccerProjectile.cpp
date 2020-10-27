@@ -1,6 +1,7 @@
 
-#include "MagicBattleSoccer.h"
+
 #include "MagicBattleSoccerProjectile.h"
+#include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerGameState.h"
 #include "MagicBattleSoccerPlayerState.h"
 #include "MagicBattleSoccerCharacter.h"
@@ -31,21 +32,21 @@ AMagicBattleSoccerProjectile::AMagicBattleSoccerProjectile(const class FObjectIn
 	PrimaryActorTick.TickGroup = TG_PrePhysics;
 	SetRemoteRoleForBackwardsCompat(ROLE_SimulatedProxy);
 	bReplicates = true;
-	bReplicateMovement = true;
+	SetReplicateMovement(true);
 }
 
 void AMagicBattleSoccerProjectile::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 	MovementComp->OnProjectileStop.AddDynamic(this, &AMagicBattleSoccerProjectile::OnImpact);
-	CollisionComp->IgnoreActorWhenMoving(Instigator, true);
+	CollisionComp->IgnoreActorWhenMoving(GetInstigator(), true);
 
-	AMagicBattleSoccerCharacter *InstigatorPlayer = Cast<AMagicBattleSoccerCharacter>(Instigator);
+	AMagicBattleSoccerCharacter *InstigatorPlayer = Cast<AMagicBattleSoccerCharacter>(GetInstigator());
 	if (nullptr != InstigatorPlayer)
 	{
 		// Ignore instigator teammates
 		AMagicBattleSoccerGameState* GameState = GetWorld()->GetGameState<AMagicBattleSoccerGameState>();
-		const TArray<AMagicBattleSoccerCharacter*>& Teammates = GameState->GetTeammates(Cast<AMagicBattleSoccerPlayerState>(InstigatorPlayer->PlayerState));
+		const TArray<AMagicBattleSoccerCharacter*>& Teammates = GameState->GetTeammates(Cast<AMagicBattleSoccerPlayerState>(InstigatorPlayer->GetPlayerState()));
 		for (TArray<AMagicBattleSoccerCharacter*>::TConstIterator It(Teammates.CreateConstIterator()); It; ++It)
 		{
 			CollisionComp->IgnoreActorWhenMoving(*It, true);
@@ -75,7 +76,7 @@ void AMagicBattleSoccerProjectile::InitVelocity(const FVector& ShootDirection)
 
 void AMagicBattleSoccerProjectile::OnImpact(const FHitResult& HitResult)
 {
-	if (Role == ROLE_Authority && !bExploded)
+	if (GetLocalRole() == ROLE_Authority && !bExploded)
 	{
 		Explode(HitResult);
 		DisableAndDestroy();
@@ -143,7 +144,7 @@ void AMagicBattleSoccerProjectile::OnRep_Exploded()
 	const FVector EndTrace = GetActorLocation() + ProjDirection * 150;
 	FHitResult Impact;
 
-	if (!GetWorld()->LineTraceSingle(Impact, StartTrace, EndTrace, COLLISION_PROJECTILE, FCollisionQueryParams(TEXT("ProjClient"), true, Instigator)))
+	if (!GetWorld()->LineTraceSingleByChannel(Impact, StartTrace, EndTrace, COLLISION_PROJECTILE, FCollisionQueryParams(TEXT("ProjClient"), true, GetInstigator())))
 	{
 		// failsafe
 		Impact.ImpactPoint = GetActorLocation();

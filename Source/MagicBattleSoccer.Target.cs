@@ -5,21 +5,11 @@ using System.Collections.Generic;
 
 public class MagicBattleSoccerTarget : TargetRules
 {
-	public MagicBattleSoccerTarget(TargetInfo Target)
+	public MagicBattleSoccerTarget(TargetInfo Target) : base(Target)
 	{
-		Type = TargetType.Game;
-	}
+        DefaultBuildSettings = BuildSettingsVersion.V2;
 
-	//
-	// TargetRules interface.
-	//
-
-	public override void SetupBinaries(
-		TargetInfo Target,
-		ref List<UEBuildBinaryConfiguration> OutBuildBinaryConfigurations,
-		ref List<string> OutExtraModuleNames
-		)
-	{
-		OutExtraModuleNames.AddRange( new string[] { "MagicBattleSoccer" } );
-	}
+        Type = TargetType.Game;
+        ExtraModuleNames.AddRange(new string[] { "MagicBattleSoccer" });
+    }
 }

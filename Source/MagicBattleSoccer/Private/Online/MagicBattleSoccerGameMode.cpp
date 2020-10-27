@@ -9,8 +9,8 @@
 * on the game class picked by the above process.
 */
 
-#include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerGameMode.h"
+#include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerGameState.h"
 #include "MagicBattleSoccerPlayerController.h"
 #include "MagicBattleSoccerPlayerState.h"
@@ -86,9 +86,9 @@ void AMagicBattleSoccerGameMode::PostLogin(APlayerController* NewPlayer)
 /** Called internally to begin the next round. This is NOT a standard Unreal function. */
 void AMagicBattleSoccerGameMode::HandleRoundHasStarted()
 {
-	AMagicBattleSoccerGameState *GameState = GetGameState();
+	AMagicBattleSoccerGameState *MBSGameState = GetGameState();
 	// Ensure the round is flagged as not in progress until everyone has spawned
-	GameState->RoundInProgress = false;
+	MBSGameState->RoundInProgress = false;
 
 	// Wipe all soccer characters off the field
 	for (TObjectIterator<AMagicBattleSoccerCharacter> Itr; Itr; ++Itr)
@@ -97,7 +97,7 @@ void AMagicBattleSoccerGameMode::HandleRoundHasStarted()
 	}
 
 	// Now we're officially in progress
-	GameState->RoundInProgress = true;
+	MBSGameState->RoundInProgress = true;
 
 	// Notify all AI controllers that the round has started
 	for (TObjectIterator<AMagicBattleSoccerAIController> Itr; Itr; ++Itr)
@@ -118,53 +118,53 @@ void AMagicBattleSoccerGameMode::HandleRoundHasStarted()
 	}
 
 	// Reset the ball position
-	if (nullptr == GameState->PenetratedGoal)
+	if (nullptr == MBSGameState->PenetratedGoal)
 	{
-		GameState->SoccerBall->SetActorLocation(FVector(0.f, 0.f, 40.f));
+		MBSGameState->SoccerBall->SetActorLocation(FVector(0.f, 0.f, 40.f));
 	}
-	else if (GameState->PenetratedGoal->TeamNumber == 1)
+	else if (MBSGameState->PenetratedGoal->TeamNumber == 1)
 	{
-		GameState->SoccerBall->SetActorLocation(GameState->Team1SoccerBallSpawnPoint->GetActorLocation());
+		MBSGameState->SoccerBall->SetActorLocation(MBSGameState->Team1SoccerBallSpawnPoint->GetActorLocation());
 	}
-	else if (GameState->PenetratedGoal->TeamNumber == 2)
+	else if (MBSGameState->PenetratedGoal->TeamNumber == 2)
 	{
-		GameState->SoccerBall->SetActorLocation(GameState->Team2SoccerBallSpawnPoint->GetActorLocation());
+		MBSGameState->SoccerBall->SetActorLocation(MBSGameState->Team2SoccerBallSpawnPoint->GetActorLocation());
 	}
 	else
 	{
 		// Unexpected case; just center the ball
-		GameState->SoccerBall->SetActorLocation(FVector(0.f, 0.f, 40.f));
+		MBSGameState->SoccerBall->SetActorLocation(FVector(0.f, 0.f, 40.f));
 	}
 
 	// Ensure the ball has no possessor and move it to the center of the map
-	GameState->SoccerBall->RoundHasStarted();
+	MBSGameState->SoccerBall->RoundHasStarted();
 
 	// Ensure there is no penetrated goal
-	GameState->PenetratedGoal = nullptr;
+	MBSGameState->PenetratedGoal = nullptr;
 }
 
 /** Called by the AMagicBattleSoccerGoal object when a goal was scored */
 void AMagicBattleSoccerGameMode::HandleGoalScored(AMagicBattleSoccerGoal *GoalContainingBall)
 {	
-	AMagicBattleSoccerGameState *GameState = GetGameState();
+	AMagicBattleSoccerGameState *MBSGameState = GetGameState();
 
 	// Assign the penetrated goal
-	if (nullptr != GameState->PenetratedGoal)
+	if (nullptr != MBSGameState->PenetratedGoal)
 	{
 		// We should never get here because we already handled a goal score in this round!
 	}
 	else
 	{
-		GameState->PenetratedGoal = GoalContainingBall;
+		MBSGameState->PenetratedGoal = GoalContainingBall;
 
 		// Change the scores
 		if (1 == GoalContainingBall->TeamNumber)
 		{
-			GameState->Team2Score++;
+			MBSGameState->Team2Score++;
 		}
 		else
 		{
-			GameState->Team1Score++;
+			MBSGameState->Team1Score++;
 		}
 
 		// The round is now over
@@ -175,10 +175,10 @@ void AMagicBattleSoccerGameMode::HandleGoalScored(AMagicBattleSoccerGoal *GoalCo
 /** Called internally to end the current round. This is NOT a standard Unreal function. */
 void AMagicBattleSoccerGameMode::HandleRoundHasEnded()
 {
-	AMagicBattleSoccerGameState *GameState = GetGameState();
+	AMagicBattleSoccerGameState *MBSGameState = GetGameState();
 
 	// Flag the round as over
-	GameState->RoundInProgress = false;
+	MBSGameState->RoundInProgress = false;
 
 	// Notify all AI controllers that the round has ended
 	for (TObjectIterator<AMagicBattleSoccerAIController> Itr; Itr; ++Itr)
@@ -212,7 +212,7 @@ float AMagicBattleSoccerGameMode::ModifyDamage(float Damage, AActor* DamagedActo
 	AMagicBattleSoccerCharacter* DamagedPawn = Cast<AMagicBattleSoccerCharacter>(DamagedActor);
 	if (DamagedPawn && EventInstigator)
 	{
-		AMagicBattleSoccerPlayerState* DamagedPlayerState = Cast<AMagicBattleSoccerPlayerState>(DamagedPawn->PlayerState);
+		AMagicBattleSoccerPlayerState* DamagedPlayerState = Cast<AMagicBattleSoccerPlayerState>(DamagedPawn->GetPlayerState());
 		AMagicBattleSoccerPlayerState* InstigatorPlayerState = Cast<AMagicBattleSoccerPlayerState>(EventInstigator->PlayerState);
 
 		// disable friendly fire

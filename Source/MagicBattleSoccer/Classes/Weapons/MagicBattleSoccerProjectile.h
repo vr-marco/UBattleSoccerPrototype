@@ -5,6 +5,8 @@
 #include "MagicBattleSoccerProjectile.generated.h"
 
 class AMagicBattleSoccerCharacter;
+class UProjectileMovementComponent;
+class USphereComponent;
 
 /**
 *

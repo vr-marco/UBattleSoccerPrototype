@@ -188,10 +188,10 @@ protected:
 	// Input - server side
 
 	UFUNCTION(reliable, server, WithValidation)
-	void ServerSetTargetLocation(FVector TargetLocation);
+	void ServerSetTargetLocation(FVector ServerTargetLocation);
 
 	UFUNCTION(reliable, server, WithValidation)
-	void ServerSetTargetLocationAdjustedForVelocity(FVector TargetLocation, FVector TargetVelocity);
+	void ServerSetTargetLocationAdjustedForVelocity(FVector ServerTargetLocation, FVector ServerTargetVelocity);
 
 	UFUNCTION(reliable, server, WithValidation)
 	void ServerStartFire();

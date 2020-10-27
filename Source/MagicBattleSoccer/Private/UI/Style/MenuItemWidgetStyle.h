@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "SlateWidgetStyleContainerBase.h"
+#include "Styling/SlateWidgetStyleContainerBase.h"
 #include "MenuItemWidgetStyle.generated.h"
 
 /**

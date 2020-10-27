@@ -1,6 +1,6 @@
 
-#include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerWeapon_Bow.h"
+#include "MagicBattleSoccer.h"
 
 AMagicBattleSoccerWeapon_Bow::AMagicBattleSoccerWeapon_Bow(const class FObjectInitializer& OI)
 	: Super(OI)
@@ -45,7 +45,7 @@ void AMagicBattleSoccerWeapon_Bow::FireWeapon()
 {
 	Super::FireWeapon();
 
-	if (nullptr != Instigator && Instigator->GetVelocity().Size() > 0.001f)
+	if (nullptr != GetInstigator() && GetInstigator()->GetVelocity().Size() > 0.001f)
 	{
 		// If the instigator is running, the arrow will have fired immediately in the call
 		// to Super::FireWeapon

@@ -1,6 +1,6 @@
 
-#include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerTrap.h"
+#include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerWeapon_Trap.h"
 #include "MagicBattleSoccerPlayerController.h"
 
@@ -19,7 +19,7 @@ void AMagicBattleSoccerWeapon_Trap::FireWeapon()
 	FVector WorldLocation;
 	FVector WorldDirection;
 
-	AMagicBattleSoccerPlayerController* const PlayerController = Instigator ? Cast<AMagicBattleSoccerPlayerController>(Instigator->Controller) : nullptr;
+	AMagicBattleSoccerPlayerController* const PlayerController = GetInstigator() ? Cast<AMagicBattleSoccerPlayerController>(GetInstigator()->Controller) : nullptr;
 	if (nullptr != PlayerController)
 	{
 		if (!PlayerController->DeprojectMousePositionToWorld(WorldLocation, WorldDirection))
@@ -47,10 +47,10 @@ bool AMagicBattleSoccerWeapon_Trap::ServerSpawnTrap_Validate(FVector Origin)
 void AMagicBattleSoccerWeapon_Trap::ServerSpawnTrap_Implementation(FVector Origin)
 {
 	FTransform SpawnTM(FQuat::Identity, Origin);
-	AMagicBattleSoccerTrap* Trap = Cast<AMagicBattleSoccerTrap>(UGameplayStatics::BeginSpawningActorFromClass(this, TrapClass, SpawnTM));
+	AMagicBattleSoccerTrap* Trap = Cast<AMagicBattleSoccerTrap>(UGameplayStatics::BeginDeferredActorSpawnFromClass(this, TrapClass, SpawnTM));
 	if (nullptr != Trap)
 	{
-		Trap->Instigator = Instigator;
+		Trap->SetInstigator(GetInstigator());
 		Trap->SetOwner(this);
 		UGameplayStatics::FinishSpawningActor(Trap, SpawnTM);
 		OnTrapSpawned(Trap);

@@ -1,5 +1,6 @@
-#include "MagicBattleSoccer.h"
+
 #include "MagicBattleSoccerUserSettings.h"
+#include "MagicBattleSoccer.h"
 
 UMagicBattleSoccerUserSettings::UMagicBattleSoccerUserSettings(const class FObjectInitializer& OI)
 	: Super(OI)

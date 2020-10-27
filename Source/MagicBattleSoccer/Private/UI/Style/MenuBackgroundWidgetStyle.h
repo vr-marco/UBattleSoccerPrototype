@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "SlateWidgetStyleContainerBase.h"
+#include "Styling/SlateWidgetStyleContainerBase.h"
 #include "MenuBackgroundWidgetStyle.generated.h"
 
 /**

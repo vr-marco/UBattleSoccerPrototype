@@ -12,7 +12,7 @@
 const FIntPoint DefaultResolutions[] = { FIntPoint(1024, 768), FIntPoint(1280, 720), FIntPoint(1920, 1080) };
 
 /** supported resolutions count*/
-const int32 DefaultResolutionCount = ARRAY_COUNT(DefaultResolutions);
+const int32 DefaultResolutionCount = UE_ARRAY_COUNT(DefaultResolutions);
 
 /**
 * Lays out and controls the Options Menu UI.
@@ -41,8 +41,8 @@ private:
 
 	int32 GetCurrentResolutionIndex() const;
 
-	FString GetResolutionText() const;
-	FString GetFullScreenText() const;
+	FText GetResolutionText() const;
+	FText GetFullScreenText() const;
 
 private:
 	/**

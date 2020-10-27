@@ -1,7 +1,6 @@
 
-
-#include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerAIController.h"
+#include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerSpawnPoint.h"
 #include "MagicBattleSoccerGameState.h"
 #include "MagicBattleSoccerGameMode.h"
@@ -40,7 +39,7 @@ void AMagicBattleSoccerAIController::RoundHasEnded_Implementation()
 bool AMagicBattleSoccerAIController::CanSpawnCharacter()
 {
 	AMagicBattleSoccerGameState *GameState = GetGameState();
-	return (Role == ROLE_Authority && nullptr != GameState && GameState->RoundInProgress);
+	return (GetLocalRole() == ROLE_Authority && nullptr != GameState && GameState->RoundInProgress);
 }
 
 /** Spawns the character */
@@ -174,7 +173,7 @@ AActor* AMagicBattleSoccerAIController::GetClosestActorObstructingPoint(const FV
 		CollisionQueryParams.AddIgnoredActors(ActorsToIgnore);
 		FCollisionObjectQueryParams CollisionObjectQueryParams;
 		CollisionObjectQueryParams.AddObjectTypesToQuery(ECC_Pawn);
-		GetWorld()->LineTraceSingle(
+		GetWorld()->LineTraceSingleByChannel(
 			HitResult
 			, GetPawn()->GetActorLocation()
 			, Point

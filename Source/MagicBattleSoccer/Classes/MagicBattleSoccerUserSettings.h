@@ -1,7 +1,7 @@
 /** MagicBattleSoccerUserSettings.h - Implements user options */
 
 #pragma once
-
+#include "GameFramework/GameUserSettings.h"
 #include "MagicBattleSoccerUserSettings.generated.h"
 
 UCLASS()

@@ -1,6 +1,6 @@
 
-#include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerGoal.h"
+#include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerGameMode.h"
 #include "MagicBattleSoccerCharacter.h"
 
@@ -19,7 +19,7 @@ AMagicBattleSoccerGameState* AMagicBattleSoccerGoal::GetGameState()
 /** Called from the blueprint when the ball enters the goal */
 void AMagicBattleSoccerGoal::HandleBallEnteredGoal()
 {
-	if (ROLE_Authority > Role)
+	if (ROLE_Authority > GetLocalRole())
 	{
 		// We should never get here since only the server should detect the soccer ball entering the goal!
 	}

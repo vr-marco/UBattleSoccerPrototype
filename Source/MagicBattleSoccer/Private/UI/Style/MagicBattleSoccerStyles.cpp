@@ -4,10 +4,9 @@
 *
 */
 
-#include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerStyles.h"
-#include "SlateBasics.h"
-#include "SlateGameResources.h"
+#include "MagicBattleSoccer.h"
+#include "Slate/SlateGameResources.h"
 
 TSharedPtr<FSlateStyleSet> FMagicBattleSoccerStyles::MenuStyleInstance = NULL;
 
@@ -33,7 +32,7 @@ FName FMagicBattleSoccerStyles::GetStyleSetName()
 	return StyleSetName;
 }
 
-#define TTF_FONT( RelativePath, ... ) FSlateFontInfo( FPaths::GameContentDir() / "Slate"/ RelativePath + TEXT(".ttf"), __VA_ARGS__ )
+#define TTF_FONT( RelativePath, ... ) FSlateFontInfo( FPaths::ProjectContentDir() / "Slate"/ RelativePath + TEXT(".ttf"), __VA_ARGS__ )
 
 TSharedRef<FSlateStyleSet> FMagicBattleSoccerStyles::Create()
 {

@@ -4,9 +4,9 @@
 *
 */
 
+#include "OptionsMenuUI.h"
 #include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerHUD.h"
-#include "OptionsMenuUI.h"
 #include "MagicBattleSoccerStyles.h"
 #include "MenuBackgroundWidgetStyle.h"
 #include "MenuItemWidgetStyle.h"
@@ -257,14 +257,16 @@ int32 SOptionsMenuUI::GetCurrentResolutionIndex() const
 	return Result;
 }
 
-FString SOptionsMenuUI::GetResolutionText() const
+FText SOptionsMenuUI::GetResolutionText() const
 {
-	return ResolutionList[GetCurrentResolutionIndex()].ToString();
+	return ResolutionList[GetCurrentResolutionIndex()];
 }
 
-FString SOptionsMenuUI::GetFullScreenText() const
+FText SOptionsMenuUI::GetFullScreenText() const
 {
-	return (FullScreenOpt == EWindowMode::Windowed) ? FString("NO") : FString("YES");
+	FText NoText = NSLOCTEXT("MyNameSpace", "No", "No");
+	FText YesText = NSLOCTEXT("MyNameSpace", "Yes", "Yes");
+	return (FullScreenOpt == EWindowMode::Windowed) ? NoText : YesText ;
 }
 
 /** Click handlers for the Resolution button. */

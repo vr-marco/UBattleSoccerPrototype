@@ -1,5 +1,6 @@
-#include "MagicBattleSoccer.h"
+
 #include "MagicBattleSoccerPlayerController.h"
+#include "MagicBattleSoccer.h"
 #include "MagicBattleSoccerCharacter.h"
 #include "MagicBattleSoccerGoal.h"
 #include "MagicBattleSoccerWeapon.h"
@@ -74,7 +75,7 @@ void AMagicBattleSoccerPlayerController::BeginPlay()
 	ServerSetPlayerName(UserSettings->PlayerName);
 
 	// Ask the server for its current time
-	if (Role < ROLE_Authority)
+	if (GetLocalRole() < ROLE_Authority)
 	{
 		timeServerTimeRequestWasPlaced = GetLocalTime();
 		ServerGetServerTime();
@@ -107,7 +108,7 @@ void AMagicBattleSoccerPlayerController::Tick(float DeltaSeconds)
 		{
 			FVector AttackDir = FindMouseAim();
 			GetPawn()->SetActorRotation(AttackDir.Rotation());
-			if (Role < ROLE_Authority)
+			if (GetLocalRole() < ROLE_Authority)
 			{
 				ServerForceActorRotation(AttackDir.Rotation());
 			}
@@ -133,8 +134,8 @@ FVector AMagicBattleSoccerPlayerController::FindMouseWorldLocation()
 {
 	FVector WorldLocation;
 	FVector WorldDirection;
-	APawn *Pawn = GetPawn();
-	if (nullptr == Pawn)
+	APawn *ThisPawn = GetPawn();
+	if (nullptr == ThisPawn)
 	{
 		// Nothing we can do
 		return FVector::ZeroVector;
@@ -142,13 +143,13 @@ FVector AMagicBattleSoccerPlayerController::FindMouseWorldLocation()
 	else if (!DeprojectMousePositionToWorld(WorldLocation, WorldDirection))
 	{
 		// Failed. Return the actor's location
-		return Pawn->GetActorLocation();
+		return ThisPawn->GetActorLocation();
 	}
 	else
 	{
 		// Calculate the point on the plane Z = ActorLocationZ that the mouse is pointing at. Remember we're not projecting onto the ground,
 		// we're projecting onto the plane that contains the player.
-		FVector Origin = Pawn->GetActorLocation();
+		FVector Origin = ThisPawn->GetActorLocation();
 		float d = FVector::DotProduct((FVector(0, 0, Origin.Z) - WorldLocation), FVector::UpVector)
 			/ FVector::DotProduct(WorldDirection, FVector::UpVector);
 		FVector GroundPoint = WorldLocation + WorldDirection * d;
@@ -162,8 +163,8 @@ FVector AMagicBattleSoccerPlayerController::FindMouseAim()
 	// Aim where the mouse is pointing
 	FVector WorldLocation;
 	FVector WorldDirection;
-	APawn *Pawn = GetPawn();
-	if (nullptr == Pawn)
+	APawn *ThisPawn = GetPawn();
+	if (nullptr == ThisPawn)
 	{
 		// Nothing we can do
 		return FVector::ZeroVector;
@@ -171,13 +172,13 @@ FVector AMagicBattleSoccerPlayerController::FindMouseAim()
 	else if (!DeprojectMousePositionToWorld(WorldLocation, WorldDirection))
 	{
 		// Failed. Return a zero vector which will result in no fire action taking place.
-		return Pawn->GetActorForwardVector();
+		return ThisPawn->GetActorForwardVector();
 	}
 	else
 	{
 		// Calculate the point on the plane Z = ActorLocationZ that the mouse is pointing at. Remember we're not projecting onto the ground,
 		// we're projecting onto the plane that contains the player.
-		FVector Origin = Pawn->GetActorLocation();
+		FVector Origin = ThisPawn->GetActorLocation();
 		float d = FVector::DotProduct((FVector(0, 0, Origin.Z) - WorldLocation), FVector::UpVector)
 			/ FVector::DotProduct(WorldDirection, FVector::UpVector);
 		FVector GroundPoint = WorldLocation + WorldDirection * d;
@@ -198,14 +199,14 @@ bool AMagicBattleSoccerPlayerController::FindDeathCameraSpot(FVector& CameraLoca
 	const float CameraOffset = 600.0f;
 	FCollisionQueryParams TraceParams(TEXT("DeathCamera"), true, GetPawn());
 
-	for (int32 i = 0; i < ARRAY_COUNT(YawOffsets); i++)
+	for (int32 i = 0; i < UE_ARRAY_COUNT(YawOffsets); i++)
 	{
 		FRotator CameraDir = ViewDir;
 		CameraDir.Yaw += YawOffsets[i];
 		CameraDir.Normalize();
 
 		const FVector TestLocation = PawnLocation - CameraDir.Vector() * CameraOffset;
-		const bool bBlocked = GetWorld()->LineTraceTest(PawnLocation, TestLocation, ECC_Camera, TraceParams);
+		const bool bBlocked = GetWorld()->LineTraceTestByChannel(PawnLocation, TestLocation, ECC_Camera, TraceParams);
 
 		if (!bBlocked)
 		{
@@ -228,7 +229,7 @@ void AMagicBattleSoccerPlayerController::ClientSetSpectatorCamera_Implementation
 bool AMagicBattleSoccerPlayerController::CanSpawnCharacter()
 {
 	AMagicBattleSoccerGameState *GameState = GetGameState();
-	return (Role == ROLE_Authority && nullptr == GetPawn() && nullptr != GameState && GameState->RoundInProgress);
+	return (GetLocalRole() == ROLE_Authority && nullptr == GetPawn() && nullptr != GameState && GameState->RoundInProgress);
 }
 
 /** Spawns the character */
@@ -413,7 +414,7 @@ void AMagicBattleSoccerPlayerController::OnRespawn()
 	AMagicBattleSoccerCharacter* PlayerPawn = Cast<AMagicBattleSoccerCharacter>(GetPawn());
 	if (nullptr == PlayerPawn)
 	{
-		if (Role < ROLE_Authority)
+		if (GetLocalRole() < ROLE_Authority)
 		{
 			ServerSpawnCharacter();
 		}
@@ -427,7 +428,7 @@ void AMagicBattleSoccerPlayerController::OnRespawn()
 /** Next round event (for debugging only) */
 void AMagicBattleSoccerPlayerController::OnNextRound()
 {
-	if (Role == ROLE_Authority)
+	if (GetLocalRole() == ROLE_Authority)
 	{
 		AMagicBattleSoccerGameMode* GameMode = Cast<AMagicBattleSoccerGameMode>(GetWorld()->GetAuthGameMode());
 		GameMode->HandleMatchHasStarted();
